@@ -4,35 +4,35 @@ get, post 요청에 대해 모두 스택이 반환되는 이유는 다음 경로
 */
 let express = require('express')
 let app = express();
+let body = require('body-parser')
+let route = express.Router()
 let stack = [];
 
-app.post("/stack", (req, res, next) => {
-  let buffer = "";
+app.use(body.text({ type: "*/*" }));
 
-  req.on("data", (data) => {
-    buffer += data;
-  });
+route.post("/", (req, res, next) => {
+  stack.push(req.body);
 
-  req.on("end", () => {
-    stack.push(buffer);
-    return next();
-  })
-})
-
-app.delete("/stack", (req, res, next) => {
-  stack.pop();
   return next();
 })
 
-app.get("/stack/:index", (req, res) => {
+route.delete("/", (req, res, next) => {
+  stack.pop();
+  
+  return next();
+})
+
+route.get("/:index", (req, res) => {
   if (req.params.index >= 0 && req.params.index < stack.length) {
     return res.end("" + stack[req.params.index]);
   }
   res.status(404).end();
 });
 
-app.use("/stack", (req,res) => {
+route.use((req,res) => {
   res.send(stack);
 })
+
+app.use("/stack", route);
 
 app.listen(3000)
